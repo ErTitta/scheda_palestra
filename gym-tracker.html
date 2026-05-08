@@ -16,11 +16,7 @@
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
   .app { display: flex; flex-direction: column; min-height: 100vh; }
 
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface); position: sticky; top: 0; z-index: 100; gap: 12px;
-  }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; gap: 12px; }
   .logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 3px; color: var(--accent); flex-shrink: 0; }
   .logo span { color: var(--text2); font-size: 11px; font-family: 'DM Mono', monospace; display: block; letter-spacing: 1px; margin-top: -4px; }
 
@@ -280,10 +276,10 @@ const PROGRAMS = {
       'Full Body 1': [
         {name:'Squat',sets:4,reps:'6–10',rest:'2–3 min'},
         {name:'Bench Press',sets:4,reps:'6–10',rest:'2–3 min'},
+        {name:'Incline Dumbbell Press',sets:3,reps:'8–12',rest:'1–2 min'},
         {name:'Barbell Row',sets:3,reps:'8–10',rest:'2–3 min'},
         {name:'Leg Extension',sets:3,reps:'12–15',rest:'1 min'},
         {name:'Seated Leg Curl',sets:3,reps:'10–12',rest:'1–2 min'},
-        {name:'Lateral Raises',sets:3,reps:'12–15',rest:'1 min'},
         {name:'Triceps Pushdown',sets:3,reps:'10–12',rest:'1 min'},
         {name:'Barbell Curl',sets:3,reps:'10–12',rest:'1 min'},
         {name:'Standing Calf Raises',sets:4,reps:'8–12',rest:'1–2 min'},
@@ -303,12 +299,12 @@ const PROGRAMS = {
       ],
       'Full Body 3': [
         {name:'Bulgarian Split Squat',sets:3,reps:'8–10 cad.',rest:'1–2 min'},
-        {name:'Incline Dumbbell Press',sets:3,reps:'8–12',rest:'1–2 min'},
+        {name:'Dumbbell Bench Press',sets:3,reps:'8–12',rest:'1–2 min'},
         {name:'Seated Cable Row',sets:3,reps:'10–12',rest:'1–2 min'},
         {name:'Lying Leg Curl',sets:3,reps:'10–12',rest:'1–2 min'},
-        {name:'Dumbbell Bench Press',sets:3,reps:'8–12',rest:'1–2 min'},
         {name:'Dumbbell Flyes',sets:3,reps:'12–15',rest:'1 min'},
         {name:'Rear Delt Fly',sets:2,reps:'12–15',rest:'1 min'},
+        {name:'Lateral Raises',sets:3,reps:'12–15',rest:'1 min'},
         {name:'Skull Crushers',sets:3,reps:'10–12',rest:'1 min'},
         {name:'Incline Dumbbell Curl',sets:3,reps:'10–12',rest:'1 min'},
         {name:'Calf Raises',sets:4,reps:'10–15',rest:'1–2 min'},
@@ -318,43 +314,38 @@ const PROGRAMS = {
   }
 };
 
-let currentProgram = '4days';
-let currentDay = 'Lower A';
-let currentLogData = {};
+let currentProgram='4days', currentDay='Lower A', currentLogData={};
+function getSessions(){return JSON.parse(localStorage.getItem('gym_sessions')||'[]');}
+function saveSessions(s){localStorage.setItem('gym_sessions',JSON.stringify(s));}
+function sanitize(n){return n.replace(/[^a-z0-9]/gi,'_');}
 
-function getSessions() { return JSON.parse(localStorage.getItem('gym_sessions')||'[]'); }
-function saveSessions(s) { localStorage.setItem('gym_sessions', JSON.stringify(s)); }
-function sanitize(n) { return n.replace(/[^a-z0-9]/gi,'_'); }
-
-function switchProgram(prog, el) {
-  currentProgram = prog;
-  document.querySelectorAll('.prog-btn').forEach(b => b.classList.remove('active'));
+function switchProgram(prog,el){
+  currentProgram=prog;
+  document.querySelectorAll('.prog-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('fb-mode', prog==='fullbody'));
-  currentDay = PROGRAMS[prog].days[0];
-  currentLogData = {};
-  const active = document.querySelector('.view.active')?.id?.replace('view-','');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('fb-mode',prog==='fullbody'));
+  currentDay=PROGRAMS[prog].days[0]; currentLogData={};
+  const active=document.querySelector('.view.active')?.id?.replace('view-','');
   if(active==='dashboard') renderDashboard();
   else if(active==='log') renderLogView();
   else if(active==='progress') renderProgress();
 }
 
-function showView(id) {
+function showView(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   event.target.classList.add('active');
   if(currentProgram==='fullbody') event.target.classList.add('fb-mode');
-  document.getElementById('save-bar').style.display = id==='log'?'flex':'none';
+  document.getElementById('save-bar').style.display=id==='log'?'flex':'none';
   if(id==='dashboard') renderDashboard();
   if(id==='log') renderLogView();
   if(id==='progress') renderProgress();
   if(id==='stats') renderStats();
 }
 
-function startWorkout(day) {
-  currentDay = day;
-  currentLogData = {};
+function startWorkout(day){
+  currentDay=day; currentLogData={};
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-log').classList.add('active');
@@ -364,14 +355,13 @@ function startWorkout(day) {
   renderLogView();
 }
 
-function renderDashboard() {
-  const prog = PROGRAMS[currentProgram];
-  const isFB = currentProgram==='fullbody';
-  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('dash-badge').innerHTML = `<div class="prog-badge ${isFB?'fullbody':'four'}">${prog.label}</div>`;
-  const sessions = getSessions();
-  document.getElementById('day-cards').innerHTML = prog.days.map(day => {
-    const count = sessions.filter(s=>s.day===day).length;
+function renderDashboard(){
+  const prog=PROGRAMS[currentProgram], isFB=currentProgram==='fullbody';
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('dash-badge').innerHTML=`<div class="prog-badge ${isFB?'fullbody':'four'}">${prog.label}</div>`;
+  const sessions=getSessions();
+  document.getElementById('day-cards').innerHTML=prog.days.map(day=>{
+    const count=sessions.filter(s=>s.day===day).length;
     return `<div class="day-card ${isFB?'fb':''}" onclick="startWorkout('${day}')">
       <div class="day-icon">${prog.icons[day]}</div>
       <div class="day-label">${day}</div>
@@ -379,76 +369,62 @@ function renderDashboard() {
       ${count?`<div class="day-streak">${count}x</div>`:''}
     </div>`;
   }).join('');
-  const recent = getSessions().slice(0,8);
-  const container = document.getElementById('recent-sessions');
-  if(!recent.length){ container.innerHTML='<div class="empty-state"><div class="es-icon">🏋️</div><div>Nessuna sessione ancora.<br>Inizia il primo allenamento!</div></div>'; return; }
-  container.innerHTML = recent.map(s=>`
+  const recent=getSessions().slice(0,8), container=document.getElementById('recent-sessions');
+  if(!recent.length){container.innerHTML='<div class="empty-state"><div class="es-icon">🏋️</div><div>Nessuna sessione ancora.<br>Inizia il primo allenamento!</div></div>';return;}
+  container.innerHTML=recent.map(s=>`
     <div class="session-item" onclick="viewSession(${s.id})">
       <div class="si-left"><div class="si-day">${s.day}</div><div class="si-date">${formatDate(s.date)}</div>${s.notes?`<div style="font-size:10px;color:var(--text3);margin-top:1px">${s.notes}</div>`:''}</div>
       <div class="si-right">${Object.keys(s.exercises).length} esercizi</div>
     </div>`).join('');
 }
 
-function renderLogView() {
-  const prog = PROGRAMS[currentProgram];
-  const isFB = currentProgram==='fullbody';
-  document.getElementById('log-badge').innerHTML = `<div class="prog-badge ${isFB?'fullbody':'four'}" style="margin-bottom:14px">${prog.label}</div>`;
-  document.getElementById('day-pills').innerHTML = prog.days.map(day=>
+function renderLogView(){
+  const prog=PROGRAMS[currentProgram], isFB=currentProgram==='fullbody';
+  document.getElementById('log-badge').innerHTML=`<div class="prog-badge ${isFB?'fullbody':'four'}" style="margin-bottom:14px">${prog.label}</div>`;
+  document.getElementById('day-pills').innerHTML=prog.days.map(day=>
     `<div class="day-pill ${isFB?'fb-pill':''} ${day===currentDay?'active':''}" onclick="selectDay('${day}',this)">${prog.icons[day]} ${day}</div>`
   ).join('');
   if(!currentLogData[currentDay]) initLogData(currentDay);
   renderExerciseLog();
 }
 
-function selectDay(day, el) {
+function selectDay(day,el){
   document.querySelectorAll('.day-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  currentDay = day;
+  el.classList.add('active'); currentDay=day;
   if(!currentLogData[currentDay]) initLogData(currentDay);
   renderExerciseLog();
 }
 
-function initLogData(day) {
-  const exs = PROGRAMS[currentProgram].workouts[day];
-  const sessions = getSessions();
-  currentLogData[day] = {};
-  exs.forEach(ex => {
-    const last = getLastSessionForExercise(ex.name, sessions);
-    currentLogData[day][ex.name] = Array.from({length:ex.sets},(_,i)=>({
-      weight: last?(last[i]?.weight||''):'',
-      reps: last?(last[i]?.reps||''):'',
-      done: false
-    }));
+function initLogData(day){
+  const exs=PROGRAMS[currentProgram].workouts[day], sessions=getSessions();
+  currentLogData[day]={};
+  exs.forEach(ex=>{
+    const last=getLastSessionForExercise(ex.name,sessions);
+    currentLogData[day][ex.name]=Array.from({length:ex.sets},(_,i)=>({weight:last?(last[i]?.weight||''):'',reps:last?(last[i]?.reps||''):'',done:false}));
   });
 }
 
-function renderExerciseLog() {
-  const container = document.getElementById('exercise-log');
-  const exercises = PROGRAMS[currentProgram].workouts[currentDay];
-  const sessions = getSessions();
-  container.innerHTML = '';
-  exercises.forEach(ex => {
-    const sets = currentLogData[currentDay][ex.name];
-    const pr = getPR(ex.name, sessions);
-    const lastVal = getLastWeight(ex.name, sessions);
-    const card = document.createElement('div');
-    card.className = 'exercise-card';
-    const header = document.createElement('div');
-    header.className = 'exercise-header';
-    header.innerHTML = `
+function renderExerciseLog(){
+  const container=document.getElementById('exercise-log');
+  const exercises=PROGRAMS[currentProgram].workouts[currentDay];
+  const sessions=getSessions();
+  container.innerHTML='';
+  exercises.forEach(ex=>{
+    const sets=currentLogData[currentDay][ex.name];
+    const pr=getPR(ex.name,sessions), lastVal=getLastWeight(ex.name,sessions);
+    const card=document.createElement('div'); card.className='exercise-card';
+    const header=document.createElement('div'); header.className='exercise-header';
+    header.innerHTML=`
       <div><div class="ex-name">${ex.name}</div><div class="ex-meta">${ex.sets} serie × ${ex.reps} · ${ex.rest}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
         ${pr?`<div class="ex-pr">PR: ${pr}kg</div>`:''}
         <div class="ex-expand" id="expand-${sanitize(ex.name)}">›</div>
       </div>`;
-    const body = document.createElement('div');
-    body.className = 'exercise-body';
-    body.id = `body-${sanitize(ex.name)}`;
-    body.style.display = 'none';
-    let html = lastVal?`<div class="last-session">↩ Ultima: ${lastVal}kg</div>`:'';
-    html += `<div class="sets-header"><span>#</span><span>KG</span><span>REPS</span><span>1RM</span><span>✓</span></div>`;
+    const body=document.createElement('div'); body.className='exercise-body'; body.id=`body-${sanitize(ex.name)}`; body.style.display='none';
+    let html=lastVal?`<div class="last-session">↩ Ultima: ${lastVal}kg</div>`:'';
+    html+=`<div class="sets-header"><span>#</span><span>KG</span><span>REPS</span><span>1RM</span><span>✓</span></div>`;
     for(let i=0;i<ex.sets;i++){
-      html += `<div class="set-row" id="setrow-${sanitize(ex.name)}-${i}">
+      html+=`<div class="set-row" id="setrow-${sanitize(ex.name)}-${i}">
         <div class="set-num">${i+1}</div>
         <input class="set-input" type="number" min="0" step="0.5" placeholder="kg" value="${sets[i].weight||''}"
           oninput="updateSet('${ex.name}',${i},'weight',this.value)" onblur="calcORM('${ex.name}',${i})">
@@ -458,25 +434,25 @@ function renderExerciseLog() {
         <div class="set-done ${sets[i].done?'checked':''}" onclick="toggleDone('${ex.name}',${i})">${sets[i].done?'✓':''}</div>
       </div>`;
     }
-    body.innerHTML = html;
-    header.onclick = () => { const open=body.style.display!=='none'; body.style.display=open?'none':'block'; document.getElementById(`expand-${sanitize(ex.name)}`).classList.toggle('open',!open); };
+    body.innerHTML=html;
+    header.onclick=()=>{const open=body.style.display!=='none';body.style.display=open?'none':'block';document.getElementById(`expand-${sanitize(ex.name)}`).classList.toggle('open',!open);};
     card.appendChild(header); card.appendChild(body); container.appendChild(card);
     for(let i=0;i<ex.sets;i++) if(sets[i].weight&&sets[i].reps) setTimeout(()=>calcORM(ex.name,i),0);
   });
   updateSaveInfo();
 }
 
-function updateSet(exName,idx,field,val){ if(currentLogData[currentDay]?.[exName]) currentLogData[currentDay][exName][idx][field]=val; updateSaveInfo(); }
-function toggleDone(exName,idx){
-  currentLogData[currentDay][exName][idx].done=!currentLogData[currentDay][exName][idx].done;
-  const el=document.querySelector(`#setrow-${sanitize(exName)}-${idx} .set-done`);
-  const done=currentLogData[currentDay][exName][idx].done;
+function updateSet(n,i,f,v){if(currentLogData[currentDay]?.[n]) currentLogData[currentDay][n][i][f]=v; updateSaveInfo();}
+function toggleDone(n,i){
+  currentLogData[currentDay][n][i].done=!currentLogData[currentDay][n][i].done;
+  const el=document.querySelector(`#setrow-${sanitize(n)}-${i} .set-done`);
+  const done=currentLogData[currentDay][n][i].done;
   el.classList.toggle('checked',done); el.textContent=done?'✓':'';
 }
-function calcORM(exName,idx){
-  const set=currentLogData[currentDay]?.[exName]?.[idx]; if(!set) return;
+function calcORM(n,i){
+  const set=currentLogData[currentDay]?.[n]?.[i]; if(!set) return;
   const w=parseFloat(set.weight),r=parseInt(set.reps);
-  const el=document.getElementById(`orm-${sanitize(exName)}-${idx}`); if(!el) return;
+  const el=document.getElementById(`orm-${sanitize(n)}-${i}`); if(!el) return;
   if(w>0&&r>0&&r<=30){el.textContent=(w*r*0.0333+w).toFixed(1)+'kg';el.style.color='var(--accent2)';}
   else{el.textContent='—';el.style.color='var(--text3)';}
 }
@@ -491,8 +467,7 @@ function saveSession(){
   const session={id:Date.now(),day:currentDay,date:new Date().toISOString(),notes:document.getElementById('session-notes').value,exercises:{},program:currentProgram};
   let hasData=false;
   for(const [n,sets] of Object.entries(currentLogData[currentDay]||{})){
-    const filled=sets.filter(s=>s.weight||s.reps);
-    if(filled.length){session.exercises[n]=sets;hasData=true;}
+    const filled=sets.filter(s=>s.weight||s.reps); if(filled.length){session.exercises[n]=sets;hasData=true;}
   }
   if(!hasData){showToast('⚠️ Inserisci almeno un peso!');return;}
   sessions.unshift(session); saveSessions(sessions);
@@ -500,41 +475,34 @@ function saveSession(){
   delete currentLogData[currentDay]; document.getElementById('session-notes').value='';
   initLogData(currentDay); renderExerciseLog(); renderDashboard();
 }
-function cancelLog(){ delete currentLogData[currentDay]; initLogData(currentDay); renderExerciseLog(); showToast('Sessione annullata'); }
+function cancelLog(){delete currentLogData[currentDay];initLogData(currentDay);renderExerciseLog();showToast('Sessione annullata');}
 
-function getLastSessionForExercise(n,sessions){ for(const s of sessions) if(s.exercises[n]) return s.exercises[n]; return null; }
-function getLastWeight(n,sessions){ for(const s of sessions){ if(s.exercises[n]){const ws=s.exercises[n].map(x=>parseFloat(x.weight)).filter(Boolean); if(ws.length) return Math.max(...ws);}} return null; }
-function getPR(n,sessions){ let max=0; sessions.forEach(s=>{if(s.exercises[n]) s.exercises[n].forEach(set=>{if(parseFloat(set.weight)>max) max=parseFloat(set.weight);})}); return max||null; }
-function getWeightHistory(n,sessions){ return [...sessions].reverse().reduce((acc,s)=>{ if(s.exercises[n]){const ws=s.exercises[n].map(x=>parseFloat(x.weight)).filter(Boolean); if(ws.length) acc.push({date:s.date,weight:Math.max(...ws),day:s.day});} return acc; },[]); }
-function formatDate(iso){ return new Date(iso).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+function getLastSessionForExercise(n,sessions){for(const s of sessions) if(s.exercises[n]) return s.exercises[n]; return null;}
+function getLastWeight(n,sessions){for(const s of sessions){if(s.exercises[n]){const ws=s.exercises[n].map(x=>parseFloat(x.weight)).filter(Boolean);if(ws.length) return Math.max(...ws);}} return null;}
+function getPR(n,sessions){let max=0;sessions.forEach(s=>{if(s.exercises[n]) s.exercises[n].forEach(set=>{if(parseFloat(set.weight)>max) max=parseFloat(set.weight);})});return max||null;}
+function getWeightHistory(n,sessions){return [...sessions].reverse().reduce((acc,s)=>{if(s.exercises[n]){const ws=s.exercises[n].map(x=>parseFloat(x.weight)).filter(Boolean);if(ws.length) acc.push({date:s.date,weight:Math.max(...ws),day:s.day});}return acc;},[]); }
+function formatDate(iso){return new Date(iso).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'});}
 
 let progressFilter='Tutti';
 function renderProgress(){
-  const sessions=getSessions();
-  const allNames=new Set(); sessions.forEach(s=>Object.keys(s.exercises).forEach(n=>allNames.add(n)));
+  const sessions=getSessions(), allNames=new Set();
+  sessions.forEach(s=>Object.keys(s.exercises).forEach(n=>allNames.add(n)));
   const filters=['Tutti',...Object.keys(PROGRAMS['4days'].workouts),...Object.keys(PROGRAMS['fullbody'].workouts)];
   document.getElementById('progress-filter').innerHTML=filters.map(f=>`<div class="filter-pill ${progressFilter===f?'active':''}" onclick="setProgressFilter('${f}')">${f}</div>`).join('');
   renderProgressGrid(sessions,allNames);
 }
 function setProgressFilter(f){progressFilter=f;renderProgress();}
-function filterProgress(q){
-  const sessions=getSessions(); const allNames=new Set(); sessions.forEach(s=>Object.keys(s.exercises).forEach(n=>allNames.add(n)));
-  renderProgressGrid(sessions,allNames,q);
-}
+function filterProgress(q){const sessions=getSessions(),allNames=new Set();sessions.forEach(s=>Object.keys(s.exercises).forEach(n=>allNames.add(n)));renderProgressGrid(sessions,allNames,q);}
 function renderProgressGrid(sessions,allNames,search=''){
   const grid=document.getElementById('progress-grid');
   let names=[...allNames];
-  if(progressFilter!=='Tutti'){
-    const exs=(PROGRAMS['4days'].workouts[progressFilter]||PROGRAMS['fullbody'].workouts[progressFilter]||[]).map(e=>e.name);
-    names=names.filter(n=>exs.includes(n));
-  }
+  if(progressFilter!=='Tutti'){const exs=(PROGRAMS['4days'].workouts[progressFilter]||PROGRAMS['fullbody'].workouts[progressFilter]||[]).map(e=>e.name);names=names.filter(n=>exs.includes(n));}
   if(search) names=names.filter(n=>n.toLowerCase().includes(search.toLowerCase()));
   if(!names.length){grid.innerHTML='<div class="empty-state"><div class="es-icon">📭</div><div>Nessun dato.</div></div>';return;}
   grid.innerHTML='';
   names.forEach(name=>{
     const history=getWeightHistory(name,sessions); if(!history.length) return;
-    const pr=Math.max(...history.map(h=>h.weight)), last=history[history.length-1].weight;
-    const trend=history.length>1?last-history[history.length-2].weight:0;
+    const pr=Math.max(...history.map(h=>h.weight)),last=history[history.length-1].weight,trend=history.length>1?last-history[history.length-2].weight:0;
     const card=document.createElement('div'); card.className='progress-card';
     card.innerHTML=`<div class="pc-name">${name}</div>
       <div class="pc-stats">
@@ -565,12 +533,7 @@ function drawBigChart(history){
   const min=Math.min(...vals)*.95,max=Math.max(...vals)*1.05,range=max-min||1;
   const w=canvas.width,h=canvas.height,pL=44,pR=8,pT=10,pB=28;
   ctx.clearRect(0,0,w,h);
-  for(let i=0;i<=4;i++){
-    const y=pT+(i/4)*(h-pT-pB);
-    ctx.strokeStyle='#2e2e38';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(w-pR,y);ctx.stroke();
-    ctx.fillStyle='#55556a';ctx.font='10px DM Mono,monospace';ctx.textAlign='right';
-    ctx.fillText((max-(i/4)*range).toFixed(1)+'kg',pL-4,y+4);
-  }
+  for(let i=0;i<=4;i++){const y=pT+(i/4)*(h-pT-pB);ctx.strokeStyle='#2e2e38';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(w-pR,y);ctx.stroke();ctx.fillStyle='#55556a';ctx.font='10px DM Mono,monospace';ctx.textAlign='right';ctx.fillText((max-(i/4)*range).toFixed(1)+'kg',pL-4,y+4);}
   if(vals.length<2){ctx.fillStyle='#e8ff47';ctx.beginPath();ctx.arc(pL+(w-pL-pR)/2,pT+(h-pT-pB)/2,5,0,Math.PI*2);ctx.fill();return;}
   ctx.beginPath();
   vals.forEach((v,i)=>{const x=pL+(i/(vals.length-1))*(w-pL-pR),y=pT+(1-(v-min)/range)*(h-pT-pB);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
@@ -589,21 +552,18 @@ function openModal(title,history,session){
     document.getElementById('modal-subtitle').textContent=`${history.length} sessioni`;
     setTimeout(()=>drawBigChart(history),50);
     const pr=Math.max(...history.map(h=>h.weight));
-    document.getElementById('modal-history').innerHTML=`<tr><th>Data</th><th>Max kg</th><th>Giorno</th></tr>`+
-      [...history].reverse().map(h=>`<tr><td>${formatDate(h.date)}</td><td>${h.weight}kg${h.weight===pr?'<span class="pr-badge">PR</span>':''}</td><td>${h.day}</td></tr>`).join('');
+    document.getElementById('modal-history').innerHTML=`<tr><th>Data</th><th>Max kg</th><th>Giorno</th></tr>`+[...history].reverse().map(h=>`<tr><td>${formatDate(h.date)}</td><td>${h.weight}kg${h.weight===pr?'<span class="pr-badge">PR</span>':''}</td><td>${h.day}</td></tr>`).join('');
   } else if(session){
     document.getElementById('modal-subtitle').textContent=session.notes||formatDate(session.date);
     document.getElementById('big-chart').getContext('2d').clearRect(0,0,999,999);
-    document.getElementById('modal-history').innerHTML=`<tr><th>Esercizio</th><th>Serie</th><th>Dettaglio</th></tr>`+
-      Object.entries(session.exercises).map(([n,sets])=>`<tr><td>${n}</td><td>${sets.length}</td><td style="font-size:10px">${sets.map((s,i)=>`${i+1}:${s.weight||'?'}×${s.reps||'?'}`).join(' ')}</td></tr>`).join('');
+    document.getElementById('modal-history').innerHTML=`<tr><th>Esercizio</th><th>Serie</th><th>Dettaglio</th></tr>`+Object.entries(session.exercises).map(([n,sets])=>`<tr><td>${n}</td><td>${sets.length}</td><td style="font-size:10px">${sets.map((s,i)=>`${i+1}:${s.weight||'?'}×${s.reps||'?'}`).join(' ')}</td></tr>`).join('');
   }
 }
 function closeModal(e){if(!e||e.target===document.getElementById('modal-overlay')) document.getElementById('modal-overlay').classList.remove('open');}
 function viewSession(id){const s=getSessions().find(x=>x.id===id);if(s) openModal(s.day+' — '+formatDate(s.date),null,s);}
 
 function renderStats(){
-  const sessions=getSessions();
-  const allEx=new Set();let totalSets=0;
+  const sessions=getSessions(); const allEx=new Set(); let totalSets=0;
   sessions.forEach(s=>{Object.entries(s.exercises).forEach(([n,sets])=>{allEx.add(n);totalSets+=sets.filter(x=>x.done||x.weight).length;});});
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat-box"><div class="sb-val">${sessions.length}</div><div class="sb-label">Sessioni totali</div></div>
